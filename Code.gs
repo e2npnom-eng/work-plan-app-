@@ -72,20 +72,6 @@ function sheet(name) {
   return SS.getSheetByName(name);
 }
 
-// แคชผลลัพธ์ไว้ 30 วินาที ลดการอ่านชีตซ้ำเวลามีคนเปิดพร้อมกันหรือกดรัวๆ
-const CACHE = CacheService.getScriptCache();
-function cachedRows(sheetName) {
-  const key = 'rows_' + sheetName;
-  const hit = CACHE.get(key);
-  if (hit) return JSON.parse(hit);
-  const rows = rowsToObjects(sheet(sheetName));
-  CACHE.put(key, JSON.stringify(rows), 30);
-  return rows;
-}
-function clearCache(sheetName) {
-  CACHE.remove('rows_' + sheetName);
-}
-
 function rowsToObjects(sh) {
   const data = sh.getDataRange().getValues();
   const headers = data.shift();
@@ -101,14 +87,14 @@ function rowsToObjects(sh) {
 // ----- Users -----
 function login(empId) {
   if (!empId) return { ok: false, error: 'กรุณากรอกรหัสพนักงาน' };
-  const users = cachedRows(SHEET_USERS);
+  const users = rowsToObjects(sheet(SHEET_USERS));
   const user = users.find(u => String(u.empId) === String(empId));
   if (!user) return { ok: false, error: 'ไม่พบรหัสพนักงานนี้ในระบบ' };
   return { ok: true, user: { empId: user.empId, name: user.name, role: user.role } };
 }
 
 function getUsers() {
-  return { ok: true, users: cachedRows(SHEET_USERS) };
+  return { ok: true, users: rowsToObjects(sheet(SHEET_USERS)) };
 }
 
 function addUser(data) {
@@ -118,7 +104,6 @@ function addUser(data) {
     return { ok: false, error: 'มีรหัสพนักงานนี้อยู่แล้ว' };
   }
   sh.appendRow([data.empId, data.name, data.role || 'employee']);
-  clearCache(SHEET_USERS);
   return { ok: true };
 }
 
@@ -128,7 +113,6 @@ function deleteUser(empId) {
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(empId)) {
       sh.deleteRow(i + 1);
-      clearCache(SHEET_USERS);
       return { ok: true };
     }
   }
@@ -146,8 +130,25 @@ function nextPlanId(sh) {
   return max + 1;
 }
 
+function isDateObj(v) {
+  return Object.prototype.toString.call(v) === '[object Date]';
+}
+function formatDateVal(v) {
+  return isDateObj(v) ? Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd') : v;
+}
+function formatTimeVal(v) {
+  return isDateObj(v) ? Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm') : v;
+}
+function normalizePlan(p) {
+  p.date = formatDateVal(p.date);
+  p.startTime = formatTimeVal(p.startTime);
+  p.endTime = formatTimeVal(p.endTime);
+  if (isDateObj(p.createdAt)) p.createdAt = formatDateVal(p.createdAt);
+  return p;
+}
+
 function getPlans(status, empId) {
-  let plans = cachedRows(SHEET_PLANS);
+  let plans = rowsToObjects(sheet(SHEET_PLANS)).map(normalizePlan);
   if (status) plans = plans.filter(p => p.status === status);
   if (empId) plans = plans.filter(p => String(p.empId) === String(empId));
   return { ok: true, plans: plans };
@@ -173,7 +174,6 @@ function addPlan(data) {
     '',
     new Date()
   ]);
-  clearCache(SHEET_PLANS);
   return { ok: true, id: id };
 }
 
@@ -187,7 +187,6 @@ function setPlanStatus(id, status, reason) {
     if (Number(data[i][0]) === Number(id)) {
       sh.getRange(i + 1, colStatus).setValue(status);
       if (reason) sh.getRange(i + 1, colReason).setValue(reason);
-      clearCache(SHEET_PLANS);
       return { ok: true };
     }
   }
