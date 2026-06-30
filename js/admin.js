@@ -60,15 +60,24 @@ async function loadUsers() {
   const tbody = document.getElementById('userTableBody');
   const res = await Api.getUsers();
   if (!res.ok || res.users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">ยังไม่มีรายชื่อพนักงาน</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">ยังไม่มีรายชื่อพนักงาน</td></tr>';
     return;
   }
   lastUsersList = res.users;
+  const deployed = (typeof USERS !== 'undefined') ? USERS : [];
+  function isDeployed(u) {
+    return deployed.some(d =>
+      String(d.empId) === String(u.empId) && d.name === u.name && d.role === u.role
+    );
+  }
   tbody.innerHTML = res.users.map(u => `
     <tr>
       <td>${escapeHtml(u.empId)}</td>
       <td>${escapeHtml(u.name)}</td>
       <td>${u.role === 'admin' ? 'แอดมิน' : 'พนักงาน'}</td>
+      <td>${isDeployed(u)
+          ? '<span class="badge badge-success">อัพเดทแล้ว</span>'
+          : '<span class="badge badge-warning">รออัพเดท</span>'}</td>
       <td style="text-align:right">
         <button class="btn-danger" style="font-size:12px;padding:4px 8px" onclick="removeUser('${u.empId}')">ลบ</button>
       </td>
