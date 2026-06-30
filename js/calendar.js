@@ -11,6 +11,11 @@ function toIsoDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '
 function init() {
   if (!user) return;
   document.getElementById('welcomeText').textContent = `สวัสดี ${user.name} (${user.role === 'admin' ? 'แอดมิน' : 'พนักงาน'})`;
+  if (user.role === 'admin') {
+    const btn = document.getElementById('adminBackBtn');
+    btn.style.display = 'inline-block';
+    btn.addEventListener('click', () => window.location.href = 'admin.html');
+  }
   renderCalendarHead();
   // โหลดข้อมูลทั้งสองส่วนพร้อมกัน แทนที่จะรอทีละอย่าง ช่วยลดเวลารวมลงครึ่งหนึ่ง
   Promise.all([loadCalendar(), loadMyRequests()]);
