@@ -94,10 +94,11 @@ function eventBlockHtml(e) {
   const startMin = parseTimeToMinutes(e.startTime);
   const endMin = Math.max(parseTimeToMinutes(e.endTime), startMin + 20);
   const top = (startMin - DAY_START_HOUR * 60) / 60 * HOUR_PX;
-  const height = Math.max((endMin - startMin) / 60 * HOUR_PX, 22);
+  const height = Math.max((endMin - startMin) / 60 * HOUR_PX, 36);
   return `<div class="event-block" style="top:${top}px;height:${height}px" title="${escapeHtml(e.task)}">
     <strong>${escapeHtml(e.task)}</strong>
     <span>${e.startTime}-${e.endTime} · ${escapeHtml(e.team || '')}</span>
+    ${e.location ? `<span class="ev-loc">สถานที่: ${escapeHtml(e.location)}</span>` : ''}
   </div>`;
 }
 
