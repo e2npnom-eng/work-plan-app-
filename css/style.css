@@ -31,7 +31,7 @@
   --font-display: 'Chakra Petch', 'Sarabun', sans-serif;
   --font-body: 'Sarabun', sans-serif;
 
-  --hour-h: 48px;
+  --hour-h: 64px;
 }
 
 * { box-sizing: border-box; }
@@ -118,7 +118,7 @@ button:active { transform: scale(.98); }
 .btn-success:hover { background: #257d59; }
 
 /* ===== Layout ===== */
-.layout { display: grid; grid-template-columns: 270px 1fr; gap: 0; align-items: start; }
+.layout { display: grid; grid-template-columns: 250px 1fr; gap: 0; align-items: start; }
 
 .sidebar {
   padding: 14px 14px 24px;
@@ -163,7 +163,7 @@ button:active { transform: scale(.98); }
 .week-view { padding: 14px 18px 40px; overflow-x: auto; }
 .week-header {
   display: grid;
-  grid-template-columns: 56px repeat(7, minmax(120px, 1fr));
+  grid-template-columns: 56px repeat(7, minmax(150px, 1fr));
   position: sticky; top: 0; z-index: 5;
   background: var(--bg);
   padding-bottom: 6px;
@@ -180,7 +180,7 @@ button:active { transform: scale(.98); }
 
 .week-body {
   display: grid;
-  grid-template-columns: 56px repeat(7, minmax(120px, 1fr));
+  grid-template-columns: 56px repeat(7, minmax(150px, 1fr));
 }
 .time-col { display: flex; flex-direction: column; }
 .time-slot {
@@ -202,9 +202,9 @@ button:active { transform: scale(.98); }
   position: absolute;
   left: 3px; right: 3px;
   border-radius: 7px;
-  padding: 4px 7px;
+  padding: 5px 8px;
   font-size: 11.5px;
-  line-height: 1.3;
+  line-height: 1.35;
   overflow: hidden;
   background: var(--pea-100);
   border-left: 4px solid var(--amber);
@@ -212,8 +212,31 @@ button:active { transform: scale(.98); }
   box-shadow: var(--shadow-sm);
   cursor: default;
 }
-.event-block strong { display: block; font-weight: 700; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.event-block span { display: block; font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-block strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: normal;
+}
+.event-block span {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: normal;
+  overflow: hidden;
+  margin-top: 1px;
+}
+.event-block .ev-loc {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 10px;
+  color: var(--pea-700);
+}
 
 /* ===== request list / badges ===== */
 .request-item {
