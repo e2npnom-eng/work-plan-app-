@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หน้าผู้ดูแลระบบ - ตารางแผนงานการปฏิบัติงาน</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <h1>หน้าผู้ดูแลระบบ</h1>
+    <div style="display:flex;gap:8px">
+      <a href="calendar.html"><button>ดูปฏิทิน</button></a>
+      <button id="logoutBtn">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-weight:600;font-size:14px;margin:0 0 10px">คำขอแผนงานรออนุมัติ</p>
+    <div id="pendingList"><div class="loading">กำลังโหลด...</div></div>
+  </div>
+
+  <div class="card">
+    <div class="topbar" style="margin-bottom:8px">
+      <p style="font-weight:600;font-size:14px;margin:0">จัดการรหัสพนักงาน</p>
+      <button id="openAddUserBtn">+ เพิ่มพนักงาน</button>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>สิทธิ์</th><th></th></tr></thead>
+      <tbody id="userTableBody"><tr><td colspan="4" class="loading">กำลังโหลด...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal เพิ่มพนักงาน -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-header"><strong>เพิ่มพนักงานใหม่</strong></div>
+    <div class="field">
+      <label class="field-label">รหัสพนักงาน</label>
+      <input type="text" id="u_empId">
+    </div>
+    <div class="field">
+      <label class="field-label">ชื่อ-สกุล</label>
+      <input type="text" id="u_name">
+    </div>
+    <div class="field">
+      <label class="field-label">สิทธิ์</label>
+      <select id="u_role">
+        <option value="employee">พนักงาน</option>
+        <option value="admin">แอดมิน</option>
+      </select>
+    </div>
+    <p id="userError" style="color:#a32d2d;font-size:13px;display:none"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="closeAddUserBtn">ยกเลิก</button>
+      <button class="btn-primary" id="submitAddUserBtn">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ปฏิเสธ -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-header"><strong>ปฏิเสธคำขอแผนงาน</strong></div>
+    <div class="field">
+      <label class="field-label">เหตุผล</label>
+      <textarea id="rejectReason" rows="3"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="closeRejectBtn">ปิด</button>
+      <button class="btn-danger" id="confirmRejectBtn">ยืนยันปฏิเสธ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

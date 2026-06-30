@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตารางแผนงานการปฏิบัติงาน</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>ตารางแผนงานการปฏิบัติงาน</h1>
+      <p class="sub" id="welcomeText">สวัสดี</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" id="openAddBtn">+ เพิ่มแผนงาน</button>
+      <button id="logoutBtn">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="topbar" style="margin-bottom:8px">
+      <button id="prevMonth">←</button>
+      <strong id="monthLabel"></strong>
+      <button id="nextMonth">→</button>
+    </div>
+    <div class="calendar-grid" id="calendarHead"></div>
+    <div class="calendar-grid" id="calendarBody" style="margin-top:4px"></div>
+  </div>
+
+  <div class="card">
+    <p style="font-weight:600;font-size:14px;margin:0 0 10px">คำขอแผนงานของฉัน</p>
+    <div id="myRequests"><div class="loading">กำลังโหลด...</div></div>
+  </div>
+</div>
+
+<!-- Modal เพิ่มแผนงาน -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <strong>เพิ่มแผนงานใหม่</strong>
+      <button id="closeModalBtn">×</button>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">วันที่</label>
+        <input type="date" id="f_date">
+      </div>
+      <div class="field">
+        <label class="field-label">เวลา</label>
+        <div style="display:flex;gap:4px">
+          <input type="time" id="f_start">
+          <input type="time" id="f_end">
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">งานที่จะทำ</label>
+      <input type="text" id="f_task" placeholder="เช่น ดับไฟบำรุงรักษาสาย D060">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">พชง.</label>
+        <input type="text" id="f_pchg">
+      </div>
+      <div class="field">
+        <label class="field-label">ชชง.</label>
+        <input type="text" id="f_chchg">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">ทีมงานที่ปฏิบัติงาน</label>
+      <input type="text" id="f_team" placeholder="เช่น ทีม A">
+    </div>
+    <div class="field">
+      <label class="field-label">สถานที่ปฏิบัติงาน</label>
+      <input type="text" id="f_location">
+    </div>
+    <div class="field">
+      <label class="field-label">แผนขอดับไฟและรายละเอียด</label>
+      <textarea id="f_outage" rows="2"></textarea>
+    </div>
+    <p id="addError" style="color:#a32d2d;font-size:13px;display:none"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button id="cancelAddBtn">ยกเลิก</button>
+      <button class="btn-primary" id="submitAddBtn">ส่งคำขอ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ยกเลิกแผนงาน -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-header"><strong>ยกเลิกคำขอแผนงาน</strong></div>
+    <div class="field">
+      <label class="field-label">เหตุผลที่ยกเลิก</label>
+      <textarea id="cancelReason" rows="3"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="closeCancelBtn">ปิด</button>
+      <button class="btn-danger" id="confirmCancelBtn">ยืนยันยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/calendar.js"></script>
+</body>
+</html>

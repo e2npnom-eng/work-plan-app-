@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ - ตารางแผนงานการปฏิบัติงาน</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="center-box">
+  <h1 style="font-size:18px;margin:0 0 4px">ตารางแผนงานการปฏิบัติงาน</h1>
+  <p class="sub" style="margin:0 0 20px">เข้าสู่ระบบด้วยรหัสพนักงาน</p>
+
+  <div class="field" style="text-align:left">
+    <label class="field-label">รหัสพนักงาน</label>
+    <input type="text" id="empId" placeholder="เช่น 64001" inputmode="numeric">
+  </div>
+
+  <button class="btn-primary" style="width:100%" id="loginBtn">เข้าสู่ระบบ</button>
+  <p id="errorMsg" style="color:#a32d2d;font-size:13px;margin-top:10px;display:none"></p>
+  <p style="font-size:12px;color:var(--text-muted);margin-top:14px">ลืมรหัส ติดต่อผู้ดูแลระบบ</p>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
