@@ -1,12 +1,29 @@
 const user = Session.requireLogin(false);
-let viewDate = new Date();
+let viewDate = new Date();       // วันที่ใช้คำนวณสัปดาห์ที่แสดง
+let miniMonthDate = new Date();  // เดือนที่แสดงใน mini calendar
 let approvedPlans = null;
 
-const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+const dayNamesShort = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const monthNamesShort = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+const DAY_START_HOUR = 6;
+const DAY_END_HOUR = 22;
+const HOUR_PX = 48;
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function toIsoDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function sameDay(a, b) { return toIsoDate(a) === toIsoDate(b); }
+function startOfWeek(d) { const r = new Date(d); r.setDate(r.getDate() - r.getDay()); r.setHours(0,0,0,0); return r; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function parseTimeToMinutes(t) {
+  if (!t) return DAY_START_HOUR * 60;
+  const [h, m] = String(t).split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 
 function init() {
   if (!user) return;
@@ -16,74 +33,131 @@ function init() {
     btn.style.display = 'inline-block';
     btn.addEventListener('click', () => window.location.href = 'admin.html');
   }
-  renderCalendarHead();
-  // โหลดข้อมูลทั้งสองส่วนพร้อมกัน แทนที่จะรอทีละอย่าง ช่วยลดเวลารวมลงครึ่งหนึ่ง
-  Promise.all([loadCalendar(), loadMyRequests()]);
+  buildTimeColumn();
+  Promise.all([loadPlans(), loadMyRequests()]).then(() => {
+    renderWeek();
+    renderMiniCalendar();
+  });
 }
 
-function renderCalendarHead() {
-  const head = document.getElementById('calendarHead');
-  head.innerHTML = dayNames.map(d => `<div class="calendar-head">${d}</div>`).join('');
+function buildTimeColumn() {
+  const col = document.getElementById('timeCol');
+  let html = '';
+  for (let h = DAY_START_HOUR; h <= DAY_END_HOUR; h++) {
+    html += `<div class="time-slot">${pad(h)}:00</div>`;
+  }
+  col.innerHTML = html;
 }
 
-async function loadCalendar(forceRefresh) {
-  document.getElementById('monthLabel').textContent =
-    monthNames[viewDate.getMonth()] + ' ' + (viewDate.getFullYear() + 543);
-  // ดึงจาก server แค่ครั้งแรก เปลี่ยนเดือนแล้วกรองข้อมูลที่มีอยู่แล้วในเครื่อง ไม่ต้องยิง request ใหม่
+async function loadPlans(forceRefresh) {
   if (forceRefresh || approvedPlans === null) {
     const res = await Api.getApprovedPlans();
     approvedPlans = res.ok ? res.plans : [];
   }
-  renderCalendarBody();
 }
 
-function renderCalendarBody() {
-  const body = document.getElementById('calendarBody');
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
+// ===== Week grid (main view) =====
+function renderWeek() {
+  const weekStart = startOfWeek(viewDate);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const today = new Date();
+
+  const startLabel = `${days[0].getDate()} ${monthNamesShort[days[0].getMonth()]}`;
+  const endLabel = `${days[6].getDate()} ${monthNamesShort[days[6].getMonth()]} ${days[6].getFullYear() + 543}`;
+  document.getElementById('weekLabel').textContent = `${startLabel} – ${endLabel}`;
+
+  const header = document.getElementById('weekHeader');
+  header.innerHTML = '<div class="time-gutter"></div>' + days.map(d => `
+    <div class="day-header ${sameDay(d, today) ? 'today' : ''}">
+      <div class="dname">${dayNamesShort[d.getDay()]}</div>
+      <div class="dnum">${d.getDate()}</div>
+    </div>
+  `).join('');
+
+  const body = document.getElementById('weekBody');
+  // ลบคอลัมน์วันเก่า เหลือแค่ time-col แล้วเพิ่มใหม่
+  body.querySelectorAll('.day-col').forEach(el => el.remove());
+
+  const gridHeight = (DAY_END_HOUR - DAY_START_HOUR + 1) * HOUR_PX;
+  days.forEach(d => {
+    const iso = toIsoDate(d);
+    const dayEvents = approvedPlans.filter(p => p.date === iso || String(p.date).startsWith(iso));
+    const col = document.createElement('div');
+    col.className = 'day-col' + (sameDay(d, today) ? ' today-col' : '');
+    col.style.height = gridHeight + 'px';
+    col.innerHTML = dayEvents.map(e => eventBlockHtml(e)).join('');
+    body.appendChild(col);
+  });
+}
+
+function eventBlockHtml(e) {
+  const startMin = parseTimeToMinutes(e.startTime);
+  const endMin = Math.max(parseTimeToMinutes(e.endTime), startMin + 20);
+  const top = (startMin - DAY_START_HOUR * 60) / 60 * HOUR_PX;
+  const height = Math.max((endMin - startMin) / 60 * HOUR_PX, 22);
+  return `<div class="event-block" style="top:${top}px;height:${height}px" title="${escapeHtml(e.task)}">
+    <strong>${escapeHtml(e.task)}</strong>
+    <span>${e.startTime}-${e.endTime} · ${escapeHtml(e.team || '')}</span>
+  </div>`;
+}
+
+function goToWeek(d) { viewDate = new Date(d); renderWeek(); renderMiniCalendar(); }
+
+document.getElementById('prevWeek').addEventListener('click', () => goToWeek(addDays(viewDate, -7)));
+document.getElementById('nextWeek').addEventListener('click', () => goToWeek(addDays(viewDate, 7)));
+document.getElementById('todayBtn').addEventListener('click', () => { miniMonthDate = new Date(); goToWeek(new Date()); });
+
+// ===== Mini calendar (sidebar นำทาง) =====
+function renderMiniCalendar() {
+  document.getElementById('miniLabel').textContent =
+    monthNames[miniMonthDate.getMonth()] + ' ' + (miniMonthDate.getFullYear() + 543);
+
+  document.getElementById('miniDayNames').innerHTML =
+    dayNamesShort.map(d => `<div class="mini-dayname">${d}</div>`).join('');
+
+  const year = miniMonthDate.getFullYear();
+  const month = miniMonthDate.getMonth();
   const firstDay = new Date(year, month, 1);
   const startOffset = firstDay.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const weekStart = startOfWeek(viewDate);
+  const weekEnd = addDays(weekStart, 6);
 
   let cells = [];
-  for (let i = 0; i < startOffset; i++) {
-    const d = new Date(year, month, 1 - (startOffset - i));
-    cells.push({ date: d, muted: true });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ date: new Date(year, month, d), muted: false });
-  }
-  while (cells.length % 7 !== 0) {
-    const last = cells[cells.length - 1].date;
-    cells.push({ date: new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1), muted: true });
-  }
+  for (let i = 0; i < startOffset; i++) cells.push({ date: addDays(firstDay, i - startOffset), muted: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ date: new Date(year, month, d), muted: false });
+  while (cells.length % 7 !== 0) cells.push({ date: addDays(cells[cells.length - 1].date, 1), muted: true });
 
-  body.innerHTML = cells.map(c => {
+  document.getElementById('miniDays').innerHTML = cells.map(c => {
     const iso = toIsoDate(c.date);
-    const events = approvedPlans.filter(p => p.date === iso || String(p.date).startsWith(iso));
-    const hasEvent = events.length > 0 && !c.muted;
-    const labels = events.slice(0, 2).map(e => `<div class="event-label">${escapeHtml(e.task)}</div>`).join('');
-    return `<div class="calendar-cell ${c.muted ? 'muted' : ''} ${hasEvent ? 'has-event' : ''}">
-      ${c.date.getDate()}
-      ${hasEvent ? labels : ''}
-    </div>`;
+    const hasEvent = approvedPlans && approvedPlans.some(p => p.date === iso || String(p.date).startsWith(iso));
+    const cls = [
+      'mini-day',
+      c.muted ? 'muted' : '',
+      sameDay(c.date, today) ? 'today' : '',
+      (c.date >= weekStart && c.date <= weekEnd) ? 'in-week' : '',
+      hasEvent ? 'has-event' : '',
+    ].filter(Boolean).join(' ');
+    return `<div class="${cls}" data-date="${iso}">${c.date.getDate()}</div>`;
   }).join('');
 }
 
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-document.getElementById('prevMonth').addEventListener('click', () => {
-  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
-  loadCalendar();
+document.getElementById('miniDays').addEventListener('click', (e) => {
+  const cell = e.target.closest('.mini-day');
+  if (!cell) return;
+  goToWeek(new Date(cell.dataset.date));
 });
-document.getElementById('nextMonth').addEventListener('click', () => {
-  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-  loadCalendar();
+document.getElementById('miniPrev').addEventListener('click', () => {
+  miniMonthDate = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth() - 1, 1);
+  renderMiniCalendar();
+});
+document.getElementById('miniNext').addEventListener('click', () => {
+  miniMonthDate = new Date(miniMonthDate.getFullYear(), miniMonthDate.getMonth() + 1, 1);
+  renderMiniCalendar();
 });
 
-// ----- My requests -----
+// ===== My requests =====
 async function loadMyRequests() {
   const box = document.getElementById('myRequests');
   const res = await Api.getMyRequests(user.empId);
@@ -100,18 +174,18 @@ async function loadMyRequests() {
   box.innerHTML = res.plans.map(p => `
     <div class="request-item">
       <div>
-        <p style="font-size:14px;margin:0;font-weight:600">${escapeHtml(p.task)}</p>
-        <p style="font-size:12px;color:var(--text-muted);margin:2px 0 0">${p.date} · ${p.startTime}-${p.endTime} · ${escapeHtml(p.team)}</p>
+        <p style="font-size:13px;margin:0;font-weight:600">${escapeHtml(p.task)}</p>
+        <p style="font-size:11.5px;color:var(--text-muted);margin:2px 0 0">${p.date} · ${p.startTime}-${p.endTime} · ${escapeHtml(p.team)}</p>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         ${statusBadge(p.status)}
-        ${p.status === 'รออนุมัติ' ? `<button class="btn-danger" style="font-size:12px;padding:4px 10px" onclick="openCancel(${p.id})">ยกเลิกคำขอ</button>` : ''}
+        ${p.status === 'รออนุมัติ' ? `<button class="btn-danger" style="font-size:11px;padding:3px 8px" onclick="openCancel(${p.id})">ยกเลิกคำขอ</button>` : ''}
       </div>
     </div>
   `).join('');
 }
 
-// ----- Add plan modal -----
+// ===== Add plan modal =====
 const addModal = document.getElementById('addModal');
 document.getElementById('openAddBtn').addEventListener('click', () => addModal.classList.add('open'));
 document.getElementById('closeModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
@@ -150,7 +224,7 @@ function clearAddForm() {
     .forEach(id => document.getElementById(id).value = '');
 }
 
-// ----- Cancel modal -----
+// ===== Cancel modal =====
 const cancelModal = document.getElementById('cancelModal');
 let cancelTargetId = null;
 function openCancel(id) {
