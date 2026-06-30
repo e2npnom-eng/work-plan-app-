@@ -7,33 +7,58 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="container">
-  <div class="topbar">
-    <div>
-      <h1>ตารางแผนงานการปฏิบัติงาน</h1>
-      <p class="sub" id="welcomeText">สวัสดี</p>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-primary" id="openAddBtn">+ เพิ่มแผนงาน</button>
-      <button id="adminBackBtn" style="display:none">หน้าแอดมิน</button>
-      <button id="logoutBtn">ออกจากระบบ</button>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="topbar" style="margin-bottom:8px">
-      <button id="prevMonth">←</button>
-      <strong id="monthLabel"></strong>
-      <button id="nextMonth">→</button>
-    </div>
-    <div class="calendar-grid" id="calendarHead"></div>
-    <div class="calendar-grid" id="calendarBody" style="margin-top:4px"></div>
+<div class="appbar">
+  <div class="appbar-left">
+    <span class="brand-mark">PEA</span>
+    <h1>ตารางแผนงานการปฏิบัติงาน</h1>
   </div>
+  <div class="appbar-center">
+    <button class="btn-ghost" id="todayBtn">วันนี้</button>
+    <button class="btn-icon" id="prevWeek">‹</button>
+    <button class="btn-icon" id="nextWeek">›</button>
+    <strong id="weekLabel"></strong>
+  </div>
+  <div class="appbar-right">
+    <span class="sub" id="welcomeText">สวัสดี</span>
+    <button id="adminBackBtn" style="display:none">หน้าแอดมิน</button>
+    <button id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</div>
 
-  <div class="card">
-    <p style="font-weight:600;font-size:14px;margin:0 0 10px">คำขอแผนงานของฉัน</p>
-    <div id="myRequests"><div class="loading">กำลังโหลด...</div></div>
-  </div>
+<div class="layout">
+  <aside class="sidebar">
+    <button class="btn-primary btn-add" id="openAddBtn">+ เพิ่มแผนงาน</button>
+
+    <div class="mini-cal">
+      <div class="mini-cal-head">
+        <button class="btn-icon" id="miniPrev">‹</button>
+        <strong id="miniLabel"></strong>
+        <button class="btn-icon" id="miniNext">›</button>
+      </div>
+      <div class="mini-grid" id="miniDayNames"></div>
+      <div class="mini-grid" id="miniDays"></div>
+    </div>
+
+    <div class="legend">
+      <p class="legend-title">สถานะ</p>
+      <div class="legend-item"><span class="dot dot-approved"></span>อนุมัติแล้ว (แสดงในตาราง)</div>
+      <div class="legend-item"><span class="dot dot-pending"></span>รออนุมัติ</div>
+      <div class="legend-item"><span class="dot dot-cancel"></span>ยกเลิก/ปฏิเสธ</div>
+    </div>
+
+    <div class="my-requests-panel">
+      <p class="panel-title">คำขอแผนงานของฉัน</p>
+      <div id="myRequests"><div class="loading">กำลังโหลด...</div></div>
+    </div>
+  </aside>
+
+  <main class="week-view">
+    <div class="week-header" id="weekHeader"></div>
+    <div class="week-body" id="weekBody">
+      <div class="time-col" id="timeCol"></div>
+    </div>
+  </main>
 </div>
 
 <!-- Modal เพิ่มแผนงาน -->
