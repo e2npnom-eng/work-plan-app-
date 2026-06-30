@@ -7,32 +7,87 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="container">
-  <div class="topbar">
+
+<div class="appbar">
+  <div class="appbar-left">
+    <span class="brand-mark">PEA</span>
     <h1>หน้าผู้ดูแลระบบ</h1>
-    <div style="display:flex;gap:8px">
-      <a href="calendar.html"><button>ดูปฏิทิน</button></a>
-      <button id="logoutBtn">ออกจากระบบ</button>
+  </div>
+  <div class="appbar-right">
+    <a href="calendar.html"><button>ดูปฏิทิน</button></a>
+    <button id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <aside class="map-panel">
+    <p class="panel-title">ตำแหน่งหน้างาน</p>
+    <iframe id="mapFrame" class="map-frame"
+      src="https://www.google.com/maps?q=การไฟฟ้าส่วนภูมิภาค&output=embed"
+      loading="lazy"></iframe>
+    <p class="map-hint" id="mapHint">คลิกชื่องานในรายการคำขอ หรือบนปฏิทิน เพื่อค้นหาสถานที่บนแผนที่</p>
+  </aside>
+
+  <div class="admin-main">
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px">คำขอแผนงานรออนุมัติ</p>
+      <div id="pendingList"><div class="loading">กำลังโหลด...</div></div>
     </div>
-  </div>
 
-  <div class="card">
-    <p style="font-weight:600;font-size:14px;margin:0 0 10px">คำขอแผนงานรออนุมัติ</p>
-    <div id="pendingList"><div class="loading">กำลังโหลด...</div></div>
-  </div>
-
-  <div class="card">
-    <div class="topbar" style="margin-bottom:8px">
-      <p style="font-weight:600;font-size:14px;margin:0">จัดการรหัสพนักงาน</p>
-      <div style="display:flex;gap:6px">
-        <button id="exportUsersBtn">Export เป็น users.js</button>
-        <button id="openAddUserBtn">+ เพิ่มพนักงาน</button>
+    <div class="card">
+      <div class="topbar" style="margin-bottom:8px">
+        <p style="font-weight:600;font-size:14px;margin:0">ปฏิทินแผนงานที่อนุมัติแล้ว</p>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn-ghost" id="todayBtn">วันนี้</button>
+          <button class="btn-icon" id="prevWeek">‹</button>
+          <button class="btn-icon" id="nextWeek">›</button>
+          <strong id="weekLabel" style="font-family:var(--font-display);font-size:13px"></strong>
+        </div>
+      </div>
+      <div class="week-header" id="weekHeader"></div>
+      <div class="week-body" id="weekBody">
+        <div class="time-col" id="timeCol"></div>
       </div>
     </div>
-    <table class="admin-table">
-      <thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>สิทธิ์</th><th>สถานะ</th><th></th></tr></thead>
-      <tbody id="userTableBody"><tr><td colspan="5" class="loading">กำลังโหลด...</td></tr></tbody>
-    </table>
+
+    <div class="card">
+      <div class="topbar" style="margin-bottom:8px">
+        <p style="font-weight:600;font-size:14px;margin:0">จัดการรหัสพนักงาน</p>
+        <div style="display:flex;gap:6px">
+          <button id="exportUsersBtn">Export เป็น users.js</button>
+          <button id="openAddUserBtn">+ เพิ่มพนักงาน</button>
+        </div>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>สิทธิ์</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="userTableBody"><tr><td colspan="5" class="loading">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal รายละเอียดคำขอแผนงาน -->
+<div class="modal-overlay" id="planDetailModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <strong id="pd_task">งานที่จะทำ</strong>
+      <button id="closePlanDetailBtn">×</button>
+    </div>
+    <div id="pd_statusBadge" style="margin-bottom:10px"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">วันที่</label><p id="pd_date" style="margin:0"></p></div>
+      <div class="field"><label class="field-label">เวลา</label><p id="pd_time" style="margin:0"></p></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">พชง.</label><p id="pd_pchg" style="margin:0"></p></div>
+      <div class="field"><label class="field-label">ชชง.</label><p id="pd_chchg" style="margin:0"></p></div>
+    </div>
+    <div class="field"><label class="field-label">ทีมงานที่ปฏิบัติงาน</label><p id="pd_team" style="margin:0"></p></div>
+    <div class="field"><label class="field-label">สถานที่ปฏิบัติงาน</label><p id="pd_location" style="margin:0"></p></div>
+    <div class="field"><label class="field-label">แผนขอดับไฟและรายละเอียด</label><p id="pd_outage" style="margin:0"></p></div>
+    <div class="field"><label class="field-label">ผู้ขอ</label><p id="pd_emp" style="margin:0"></p></div>
+    <p id="pd_cancelReason" style="color:var(--danger);font-size:13px;display:none"></p>
+    <div id="pd_actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"></div>
   </div>
 </div>
 
