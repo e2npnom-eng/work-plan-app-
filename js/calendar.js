@@ -213,11 +213,19 @@ document.getElementById('submitAddBtn').addEventListener('click', async () => {
     return;
   }
   errEl.style.display = 'none';
-  const res = await Api.addPlan(data);
-  if (!res.ok) { errEl.textContent = res.error || 'บันทึกไม่สำเร็จ'; errEl.style.display = 'block'; return; }
-  addModal.classList.remove('open');
-  clearAddForm();
-  loadMyRequests();
+  const submitBtn = document.getElementById('submitAddBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="btn-spinner"></span> กำลังส่งคำขอ...';
+  try {
+    const res = await Api.addPlan(data);
+    if (!res.ok) { errEl.textContent = res.error || 'บันทึกไม่สำเร็จ'; errEl.style.display = 'block'; return; }
+    addModal.classList.remove('open');
+    clearAddForm();
+    loadMyRequests();
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'ส่งคำขอ';
+  }
 });
 
 function clearAddForm() {
