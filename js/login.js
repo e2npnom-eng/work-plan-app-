@@ -7,22 +7,13 @@ function showError(msg) {
   errorMsg.style.display = 'block';
 }
 
-async function doLogin() {
+function doLogin() {
   const empId = empIdInput.value.trim();
   if (!empId) { showError('กรุณากรอกรหัสพนักงาน'); return; }
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'กำลังเข้าสู่ระบบ...';
-  try {
-    const res = await Api.login(empId);
-    if (!res.ok) { showError(res.error || 'ไม่พบรหัสพนักงานนี้'); return; }
-    Session.save(res.user);
-    window.location.href = res.user.role === 'admin' ? 'admin.html' : 'calendar.html';
-  } catch (e) {
-    showError('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: ' + e.message);
-  } finally {
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'เข้าสู่ระบบ';
-  }
+  const user = USERS.find(u => String(u.empId) === String(empId));
+  if (!user) { showError('ไม่พบรหัสพนักงานนี้ในระบบ'); return; }
+  Session.save({ empId: user.empId, name: user.name, role: user.role });
+  window.location.href = user.role === 'admin' ? 'admin.html' : 'calendar.html';
 }
 
 loginBtn.addEventListener('click', doLogin);

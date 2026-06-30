@@ -63,6 +63,7 @@ async function loadUsers() {
     tbody.innerHTML = '<tr><td colspan="4" class="empty-state">ยังไม่มีรายชื่อพนักงาน</td></tr>';
     return;
   }
+  lastUsersList = res.users;
   tbody.innerHTML = res.users.map(u => `
     <tr>
       <td>${escapeHtml(u.empId)}</td>
@@ -74,6 +75,27 @@ async function loadUsers() {
     </tr>
   `).join('');
 }
+
+function exportUsersJs(users) {
+  const lines = users.map(u =>
+    `  { empId: '${u.empId}', name: '${String(u.name).replace(/'/g, "\\'")}', role: '${u.role}' },`
+  ).join('\n');
+  const content = `// ===== รายชื่อพนักงาน (static) =====
+// ห้ามแก้ไฟล์นี้ด้วยมือ ให้แก้ผ่านหน้าแอดมินแล้วกด "Export เป็น users.js" แทน
+// แก้แล้วต้องอัปโหลดทับไฟล์นี้บน GitHub repo เอง
+const USERS = [
+${lines}
+];
+`;
+  const blob = new Blob([content], { type: 'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'users.js';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+let lastUsersList = [];
 
 async function removeUser(empId) {
   if (!confirm('ยืนยันลบรหัสพนักงาน ' + empId + ' ?')) return;
@@ -104,6 +126,11 @@ document.getElementById('submitAddUserBtn').addEventListener('click', async () =
   document.getElementById('u_name').value = '';
   addUserModal.classList.remove('open');
   loadUsers();
+});
+
+document.getElementById('exportUsersBtn').addEventListener('click', () => {
+  if (lastUsersList.length === 0) { alert('ยังไม่มีรายชื่อพนักงานให้ export'); return; }
+  exportUsersJs(lastUsersList);
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
