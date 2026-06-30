@@ -1,6 +1,6 @@
 const user = Session.requireLogin(false);
 let viewDate = new Date();
-let approvedPlans = [];
+let approvedPlans = null;
 
 const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -12,8 +12,8 @@ function init() {
   if (!user) return;
   document.getElementById('welcomeText').textContent = `สวัสดี ${user.name} (${user.role === 'admin' ? 'แอดมิน' : 'พนักงาน'})`;
   renderCalendarHead();
-  loadCalendar();
-  loadMyRequests();
+  // โหลดข้อมูลทั้งสองส่วนพร้อมกัน แทนที่จะรอทีละอย่าง ช่วยลดเวลารวมลงครึ่งหนึ่ง
+  Promise.all([loadCalendar(), loadMyRequests()]);
 }
 
 function renderCalendarHead() {
@@ -21,11 +21,14 @@ function renderCalendarHead() {
   head.innerHTML = dayNames.map(d => `<div class="calendar-head">${d}</div>`).join('');
 }
 
-async function loadCalendar() {
+async function loadCalendar(forceRefresh) {
   document.getElementById('monthLabel').textContent =
     monthNames[viewDate.getMonth()] + ' ' + (viewDate.getFullYear() + 543);
-  const res = await Api.getApprovedPlans();
-  approvedPlans = res.ok ? res.plans : [];
+  // ดึงจาก server แค่ครั้งแรก เปลี่ยนเดือนแล้วกรองข้อมูลที่มีอยู่แล้วในเครื่อง ไม่ต้องยิง request ใหม่
+  if (forceRefresh || approvedPlans === null) {
+    const res = await Api.getApprovedPlans();
+    approvedPlans = res.ok ? res.plans : [];
+  }
   renderCalendarBody();
 }
 
